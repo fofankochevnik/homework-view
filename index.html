@@ -35,7 +35,6 @@
     position: relative;
   }
 
-  /* Фоновые блобы */
   body::before {
     content: '';
     position: fixed;
@@ -68,7 +67,6 @@
     100% { transform: translate(40px, 30px) scale(1.08); }
   }
 
-  /* Шапка */
   header {
     position: relative;
     z-index: 10;
@@ -129,7 +127,6 @@
     50% { opacity: 0.5; transform: scale(0.8); }
   }
 
-  /* Статус обработки */
   #status-bar {
     position: relative;
     z-index: 10;
@@ -165,7 +162,6 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Сетка предметов */
   .grid {
     position: relative;
     z-index: 10;
@@ -177,16 +173,13 @@
     margin: 0 auto;
   }
 
-  /* Карточка предмета */
   .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 18px;
     padding: 18px 20px;
     backdrop-filter: blur(20px) saturate(140%);
-    box-shadow:
-      0 4px 24px var(--shadow),
-      inset 0 1px 0 rgba(168, 230, 207, 0.08);
+    box-shadow: 0 4px 24px var(--shadow), inset 0 1px 0 rgba(168, 230, 207, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     animation: fadeUp 0.6s ease both;
     cursor: default;
@@ -195,10 +188,7 @@
   .card:hover {
     transform: translateY(-3px);
     border-color: var(--border-bright);
-    box-shadow:
-      0 8px 32px var(--shadow),
-      0 0 20px var(--glow),
-      inset 0 1px 0 rgba(168, 230, 207, 0.12);
+    box-shadow: 0 8px 32px var(--shadow), 0 0 20px var(--glow), inset 0 1px 0 rgba(168, 230, 207, 0.12);
   }
 
   .card:nth-child(1) { animation-delay: 0.05s; }
@@ -254,7 +244,6 @@
     font-size: 12px;
   }
 
-  /* Ссылки ГДЗ */
   .gdz-links {
     display: flex;
     flex-wrap: wrap;
@@ -283,7 +272,6 @@
     box-shadow: 0 0 12px var(--glow);
   }
 
-  /* Время обновления */
   .update-time {
     font-size: 10px;
     color: var(--text-mute);
@@ -291,7 +279,6 @@
     text-align: right;
   }
 
-  /* Пустой стейт */
   .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -310,7 +297,6 @@
     line-height: 1.8;
   }
 
-  /* Эндпоинт для MacroDroid */
   .api-hint {
     position: fixed;
     bottom: 16px;
@@ -370,7 +356,6 @@
     word-break: break-all;
   }
 
-  /* Анимации */
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
@@ -381,7 +366,6 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Зернистость */
   .grain {
     position: fixed;
     inset: 0;
@@ -420,17 +404,14 @@
   <details>
     <summary>API для MacroDroid</summary>
     <div class="api-hint-body">
-      Отправляй POST запрос на этот же файл через GitHub Pages:<br>
-      <code>POST https://fofankochevnik.github.io/hw-update<br>Content-Type: application/json<br>{"raw_text": "транскрипт со скрина"}</code>
-      <br>Но поскольку GitHub Pages статика — нужен отдельный бэкенд.<br>
-      Смотри файл <strong>backend.md</strong> в репо для инструкции.
+      Отправляй POST запрос на бэкенд:<br>
+      <code>POST https://popka-esha.onrender.com/api/update-hw<br>Content-Type: application/json<br>{"raw_text": "транскрипт со скрина"}</code>
     </div>
   </details>
 </div>
 
 <script>
-const OPENROUTER_KEY = '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';
-const GITHUB_TOKEN_KEY = 'hw_github_token';
+const BACKEND_URL = 'https://popka-esha.onrender.com';
 const GITHUB_REPO = 'fofankochevnik/fofankochevnik.github.io';
 const GITHUB_BRANCH = 'main';
 
@@ -449,22 +430,18 @@ const GDZ = {
   okr_nb:     p => `https://gdz-raketa.ru/okruzhayushchiy-mir/4-klass/rabochaya-tetrad-pleshakov/2-chast-stranica-${p}/`,
 };
 
-// Дата
 function setDate() {
   const d = new Date();
   const opts = { weekday: 'long', day: 'numeric', month: 'long' };
-  document.getElementById('current-date').textContent =
-    d.toLocaleDateString('ru-RU', opts);
+  document.getElementById('current-date').textContent = d.toLocaleDateString('ru-RU', opts);
 }
 
-// Показать статус
 function setStatus(text, visible = true) {
   const bar = document.getElementById('status-bar');
   document.getElementById('status-text').textContent = text;
   bar.classList.toggle('visible', visible);
 }
 
-// Парсинг расписания
 function parseSchedule(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   const result = {};
@@ -472,7 +449,6 @@ function parseSchedule(text) {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    // Строка урока: "1: Математика, 08:30..."
     const lessonMatch = line.match(/^\d+:\s*(.+?),?\s*\d{1,2}:\d{2}/);
     if (lessonMatch) {
       const subjectRaw = lessonMatch[1].toLowerCase();
@@ -485,10 +461,8 @@ function parseSchedule(text) {
       }
       continue;
     }
-    // Домашка
     if (line.startsWith('🏠') && currentSubject) {
       let hw = line.replace('🏠', '').trim();
-      // Собираем многострочную домашку
       let j = i + 1;
       while (j < lines.length && !lines[j].match(/^\d+:/) && !lines[j].startsWith('🏠') && !lines[j].startsWith('⇨')) {
         hw += ' ' + lines[j];
@@ -500,7 +474,6 @@ function parseSchedule(text) {
   return result;
 }
 
-// Парсинг страниц для ГДЗ
 function extractPages(text) {
   const pages = [];
   const m = text.match(/[Сс]тр\.?\s*(\d+)/g);
@@ -528,7 +501,6 @@ function buildGdzLinks(subjectId, hwText) {
   return links;
 }
 
-// Рендер карточек
 function renderCards(hwData, dateStr) {
   const grid = document.getElementById('subjects-grid');
   grid.innerHTML = '';
@@ -563,32 +535,18 @@ function renderCards(hwData, dateStr) {
   }
 }
 
-// Исправить транскрипт через OpenRouter
-async function fixTranscript(rawText) {
-  setStatus('отправляю в нейронку...');
-  const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+// Запрос на бэкенд — ключ на рендере, в коде его нет
+async function processWithBackend(rawText) {
+  setStatus('отправляю на бэкенд...');
+  const resp = await fetch(`${BACKEND_URL}/api/fix-text`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENROUTER_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'inclusion/ring-2.6-1t:free',
-      messages: [
-        {
-          role: 'system',
-          content: `Ты помощник, который исправляет транскрипт OCR русского текста. Тебе дают текст из расписания школьного дневника, где русские слова написаны латиницей (транслитерация) или с ошибками OCR. Верни ТОЛЬКО исправленный русский текст в том же формате, без пояснений. Сохраняй эмодзи 📅 🏠 ⇨ и структуру строк.`
-        },
-        { role: 'user', content: rawText }
-      ],
-      max_tokens: 1500,
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: rawText })
   });
   const data = await resp.json();
-  return data.choices?.[0]?.message?.content || rawText;
+  return data.fixedText || rawText;
 }
 
-// Загрузить homework.json с GitHub
 async function loadHomework() {
   try {
     const resp = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/homework.json?t=${Date.now()}`);
@@ -597,71 +555,46 @@ async function loadHomework() {
   } catch { return null; }
 }
 
-// Сохранить homework.json на GitHub
-async function saveHomework(hwData, dateStr) {
-  const token = localStorage.getItem(GITHUB_TOKEN_KEY);
-  if (!token) return false;
-
-  const content = JSON.stringify({ date: dateStr, subjects: Object.entries(hwData).map(([id, hw]) => ({ id, hw })) }, null, 2);
-  const encoded = btoa(unescape(encodeURIComponent(content)));
-
-  // Получаем sha текущего файла
-  let sha = '';
-  try {
-    const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/homework.json`, {
-      headers: { Authorization: `token ${token}` }
-    });
-    if (r.ok) { const d = await r.json(); sha = d.sha; }
-  } catch {}
-
-  const body = { message: `update homework ${dateStr}`, content: encoded, branch: GITHUB_BRANCH };
-  if (sha) body.sha = sha;
-
-  const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/homework.json`, {
-    method: 'PUT',
-    headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  return resp.ok;
-}
-
-// Принять текст от MacroDroid через URL параметр
-// MacroDroid открывает: https://fofankochevник.github.io/?raw=<urlencode текст>
 async function handleIncomingText() {
   const params = new URLSearchParams(window.location.search);
   const raw = params.get('raw');
   if (!raw) return false;
 
   setStatus('получен текст от MacroDroid...');
-
-  // Чистим URL чтобы не мелькал
   window.history.replaceState({}, '', window.location.pathname);
 
   const dateStr = new Date().toLocaleString('ru-RU');
 
-  setStatus('исправляю транскрипт...');
+  setStatus('исправляю транскрипт через бэкенд...');
   let fixed = raw;
-  try { fixed = await fixTranscript(raw); } catch (e) { console.warn('OpenRouter error:', e); }
+  try { 
+    fixed = await processWithBackend(raw); 
+  } catch (e) { 
+    console.warn('Backend error:', e); 
+  }
 
   setStatus('парсю расписание...');
   const hwData = parseSchedule(fixed);
 
   setStatus('сохраняю на GitHub...');
-  await saveHomework(hwData, dateStr);
+  // Отправляем на бэкенд для сохранения
+  await fetch(`${BACKEND_URL}/api/save-hw`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ hwData, date: dateStr })
+  });
 
   renderCards(hwData, dateStr);
   setStatus('готово ✓', false);
   return true;
 }
 
-// Инициализация
 async function init() {
   setDate();
 
   const handled = await handleIncomingText();
   if (handled) return;
 
-  // Иначе загружаем сохранённое
   setStatus('загружаю домашку...', true);
   const data = await loadHomework();
   setStatus('', false);
@@ -670,12 +603,6 @@ async function init() {
     const hwData = {};
     data.subjects.forEach(s => { hwData[s.id] = s.hw; });
     renderCards(hwData, data.date || '');
-  }
-
-  // Токен GitHub — сохраняем если не было
-  if (!localStorage.getItem(GITHUB_TOKEN_KEY)) {
-    const t = prompt('Введи GitHub токен для сохранения домашки (можно пропустить):');
-    if (t) localStorage.setItem(GITHUB_TOKEN_KEY, t);
   }
 }
 
