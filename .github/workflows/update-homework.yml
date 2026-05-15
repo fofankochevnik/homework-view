@@ -1,0 +1,96 @@
+name: Update Homework
+
+on:
+  schedule:
+    - cron: '10 10 * * *'  # 13:10 MSK (UTC+3)
+  workflow_dispatch:  # чтобы можно было запустить вручную из вкладки Actions
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Calculate dates
+        id: dates
+        run: |
+          d1=$(date -d "+1 day" +%Y%m%d)
+          d2=$(date -d "+7 day" +%Y%m%d)
+          echo "d1=$d1" >> $GITHUB_OUTPUT
+          echo "d2=$d2" >> $GITHUB_OUTPUT
+          echo "Сегодня: $(date +%Y-%m-%d)"
+          echo "Завтра: $d1"
+          echo "Через 7 дней: $d2"
+      
+      - name: Fetch homework from school API
+        run: |
+          curl -s "https://edu.schools48.ru/apiv3/gethomework?devkey=6566345ff2850c724676decefe5c2117&out_format=json&auth_token=b73c9f3d2cf0def5559f0d5b472c8d677d6973881200dc781eb84a2a8cb13___209633&vendor=lpsk1733844979&student=1781&startdate=${{ steps.dates.outputs.d1 }}&enddate=${{ steps.dates.outputs.d2 }}" > raw.json
+          
+          echo "Получен JSON размером: $(wc -c < raw.json) байт"
+          cat raw.json | head -c 500
+      
+      - name: Parse homework with jq
+        run: |
+          cat > parse.jq << 'EOF'
+          .response.result.students["1781"].days as $days
+          | $days | to_entries 
+          | map(select(.key >= $d1)) 
+          | .[0].value.items as $items
+          | [
+              {
+                "id": "math",
+                "hw": ($items["Математика"].homework // {} | [.[].value] | join(" "))
+              },
+              {
+                "id": "rus", 
+                "hw": ($items["Русский язык"].homework // {} | [.[].value] | join(" "))
+              },
+              {
+                "id": "lit",
+                "hw": ($items["Литературное чтение"].homework // {} | [.[].value] | join(" "))
+              },
+              {
+                "id": "eng",
+                "hw": ($items["Английский язык"].homework // {} | [.[].value] | join(" "))
+              },
+              {
+                "id": "okr",
+                "hw": ($items["Окружающий мир"].homework // {} | [.[].value] | join(" "))
+              }
+            ]
+            | map(select(.hw != ""))
+            | {date: $d1, subjects: .}
+          EOF
+          
+          jq -r --arg d1 "${{ steps.dates.outputs.d1 }}" -f parse.jq raw.json > homework.json
+          
+          echo "Парсинг завершён. Результат:"
+          cat homework.json
+      
+      - name: Check if homework.json changed
+        id: check
+        run: |
+          if git diff --quiet homework.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Домашка не изменилась"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Домашка изменилась!"
+          fi
+      
+      - name: Commit and push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add homework.json
+          git commit -m "Автообновление домашнего задания за ${{ steps.dates.outputs.d1 }}"
+          git push
+          
+          echo "✅ Домашка обновлена!"
+      
+      - name: No changes message
+        if: steps.check.outputs.changed == 'false'
+        run: echo "ℹ️ Изменений нет, коммит не требуется"
